@@ -1,5 +1,5 @@
 {
-	"name": "regweb/api",
+	"name": "regweb/regweb-api-php",
 	"description": "Wrapper around Regwebs REST api.",
 	"require": {
 		"ext-curl": "*"
