@@ -1,0 +1,12 @@
+{
+	"name": "regweb/api",
+	"description": "Wrapper around Regwebs REST api.",
+	"require": {
+		"ext-curl": "*"
+	},
+	"autoload": {
+		"psr-0": {
+			"Regweb\\": "src/"
+		}
+	}
+}
