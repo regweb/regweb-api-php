@@ -17,7 +17,7 @@ class RestResponse {
 	
 	public function __construct($statusCode, $body, $rawBody) {
 		$this->statusCode = $statusCode;
-		$this->content = $body;
+		$this->body = $body;
 		$this->rawBody = $rawBody;
 	}
 	

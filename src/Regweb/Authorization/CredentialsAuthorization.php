@@ -33,13 +33,13 @@ class CredentialsAuthorization implements AuthSchemeInterface {
 		
 		$response = $request->execute();
 		
-		switch ($response->getStatusCode()) {
+		switch ($response->statusCode) {
 			case 200:
 				// Success
 				$this->session->setValues(array(
-					'access_token' 	=> $response->getValue('access_token', false),
-					'refresh_token' => $response->getValue('refresh_token', false),
-					'refresh_at' 	=> time() + $response->getValue('expires_in', false) - 5));
+					'access_token' 	=> $response->body['access_token'],
+					'refresh_token' => $response->body['refresh_token'],
+					'refresh_at' 	=> time() + $response->body['expires_in'] - 5));
 				
 				return true;
 				break;
@@ -80,8 +80,8 @@ class CredentialsAuthorization implements AuthSchemeInterface {
 			case 200:
 				// Success
 				$this->session->setValues(array(
-					'access_token' 	=> $response->getValue('access_token', false),
-					'refresh_at' 	=> time() + $response->getValue('expires_in', false) - 5));
+					'access_token' 	=> $response->body['access_token'],
+					'refresh_at' 	=> time() + $response->body['expires_in'] - 5));
 				
 				// The server may or may not send a new refresh token
 				if (isset($response->body['refresh_token']) && $response->body['refresh_token']  != '') {

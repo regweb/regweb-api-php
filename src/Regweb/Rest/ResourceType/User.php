@@ -6,6 +6,7 @@ class User {
 	public $firstname;
 	public $lastname;
 	public $isMember;
+	public $email;
 	/**
 	 * Member data
 	 * @var Member

@@ -1,2 +1,6 @@
 vendor
 composer.phar
+.git
+.settings
+.buildpath
+.project

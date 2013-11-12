@@ -71,24 +71,14 @@ class RestRequest {
 		$response = new RestResponse($httpCode, json_decode($curlResponse, true), $curlResponse);
 		
 		// Generic error handling og errors signaled in http status code
-		$statusCode = $response->getStatusCode();
+		$statusCode = $response->statusCode;
 		switch ($statusCode) {
-			case 400:
-				throw new BadRequest('bad_request', '', $response);
-				break;
 			case 401:
 				throw new Unauthorized('unauthorized', '', $response);
 				break;
 			case 403:
 				throw new Forbidden('forbidden', '', $response);
 				break;
-			default:
-				if ($statusCode >= 400 && $statusCode < 500) {
-					throw new RestException('error', '', $response);
-				}
-				if ($statusCode >= 500 && $statusCode < 600) {
-					throw new ServerError('server_error', '', $response);
-				}
 		}
 		
 		return $response;

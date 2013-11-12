@@ -9,6 +9,8 @@ use Regweb\Rest\ResourceType\Member,
     Regweb\Rest\ResourceType\User;
 use Regweb\Rest\Exceptions\UnexpectedResponse;
 use Regweb\Rest\UpdateResult;
+use Regweb\Rest\ResourceType\OptionalSelectValues;
+use Regweb\Rest\ResourceType\OptionalSelectValue;
 
 class RegwebApi {
 	
@@ -36,21 +38,50 @@ class RegwebApi {
 		$user->firstname = $response->body['firstname'];
 		$user->lastname = $response->body['lastname'];
 		$user->isMember = $response->body['is_member'];
+		$user->email = $response->body['email'];
 		
-		$member = new Member();
-		$member->id = $response->body['member.id'];
-		$member->firstname = $response->body['member.firstname'];
-		$member->lastname = $response->body['member.lastname'];
-		$member->address1 = $response->body['member.address1'];
-		$member->address2 = $response->body['member.address2'];
-		$member->postalcode = $response->body['member.postalcode'];
-		$member->phone1 = $response->body['member.phone1'];
-		$member->phone2 = $response->body['member.phone2'];
-		$member->mobile = $response->body['member.mobile'];
-		$member->email = $response->body['member.email'];
-		
-		$user->member = $member;
-		
+		if ($user->isMember) {
+			// Assume expanded data
+			$memberData = $response->body['member'];
+			$member = new Member();
+			$member->id 		= $memberData['id'];
+			$member->firstname 	= $memberData['firstname'];
+			$member->lastname 	= $memberData['lastname'];
+			$member->address1 	= $memberData['address1'];
+			$member->address2 	= $memberData['address2'];
+			$member->postalcode = $memberData['postalcode'];
+			$member->phone1 	= $memberData['phone1'];
+			$member->phone2 	= $memberData['phone2'];
+			$member->mobile 	= $memberData['mobile'];
+			$member->email 		= $memberData['email'];
+			
+			$member->optionalTextfield1 = $memberData['optional_textfield1'];
+			$member->optionalTextfield2 = $memberData['optional_textfield2'];
+			$member->optionalTextfield3 = $memberData['optional_textfield3'];
+			$member->optionalTextfield4 = $memberData['optional_textfield4'];
+			$member->optionalTextfield5 = $memberData['optional_textfield5'];
+			$member->optionalTextfield6 = $memberData['optional_textfield6'];
+			
+			$member->optionalSelect1 = $memberData['optional_select1'];
+			$member->optionalSelect2 = $memberData['optional_select2'];
+			$member->optionalSelect3 = $memberData['optional_select3'];
+			$member->optionalSelect4 = $memberData['optional_select4'];
+			
+			$member->optionalSelect1Label = $memberData['optional_select1_label'];
+			$member->optionalSelect2Label = $memberData['optional_select2_label'];
+			$member->optionalSelect3Label = $memberData['optional_select3_label'];
+			$member->optionalSelect4Label = $memberData['optional_select4_label'];
+			
+			$member->optionalDate1 = $memberData['optional_date1'];
+			$member->optionalDate2 = $memberData['optional_date2'];
+			
+			$member->optionalCheckbox1 = $memberData['optional_checkbox1'];
+			$member->optionalCheckbox2 = $memberData['optional_checkbox2'];
+			$member->optionalCheckbox3 = $memberData['optional_checkbox3'];
+			$member->optionalCheckbox4 = $memberData['optional_checkbox4'];
+			
+			$user->member = $member;
+		}
 		return $user;
 	}
 	
@@ -65,18 +96,44 @@ class RegwebApi {
 		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/members/' . $id);
 		$request->getParams['access_token'] = $this->authHandler->getAccessToken();
 		$response = $request->execute();
+		$memberData = $response->body;
 		
 		$member = new Member();
 		$member->id = $response->getValue['id'];
-		$member->firstname 	= $response->getValue['firstname'];
-		$member->lastname 	= $response->getValue['lastname'];
-		$member->address1 	= $response->getValue['address1'];
-		$member->address2 	= $response->getValue['address2'];
-		$member->postalcode = $response->getValue['postalcode'];
-		$member->phone1 	= $response->getValue['phone1'];
-		$member->phone2 	= $response->getValue['phone2'];
-		$member->mobile 	= $response->getValue['mobile'];
-		$member->email 		= $response->getValue['email'];
+		$member->firstname 	= $memberData['firstname'];
+		$member->lastname 	= $memberData['lastname'];
+		$member->address1 	= $memberData['address1'];
+		$member->address2 	= $memberData['address2'];
+		$member->postalcode = $memberData['postalcode'];
+		$member->phone1 	= $memberData['phone1'];
+		$member->phone2 	= $memberData['phone2'];
+		$member->mobile 	= $memberData['mobile'];
+		$member->email 		= $memberData['email'];
+		
+		$member->optionalTextfield1 = $memberData['optional_textfield1'];
+		$member->optionalTextfield2 = $memberData['optional_textfield2'];
+		$member->optionalTextfield3 = $memberData['optional_textfield3'];
+		$member->optionalTextfield4 = $memberData['optional_textfield4'];
+		$member->optionalTextfield5 = $memberData['optional_textfield5'];
+		$member->optionalTextfield6 = $memberData['optional_textfield6'];
+			
+		$member->optionalSelect1 = $memberData['optional_select1'];
+		$member->optionalSelect2 = $memberData['optional_select2'];
+		$member->optionalSelect3 = $memberData['optional_select3'];
+		$member->optionalSelect4 = $memberData['optional_select4'];
+		
+		$member->optionalSelect1Label = $memberData['optional_select1_label'];
+		$member->optionalSelect2Label = $memberData['optional_select2_label'];
+		$member->optionalSelect3Label = $memberData['optional_select3_label'];
+		$member->optionalSelect4Label = $memberData['optional_select4_label'];
+			
+		$member->optionalDate1 = $memberData['optional_date1'];
+		$member->optionalDate2 = $memberData['optional_date2'];
+			
+		$member->optionalCheckbox1 = $memberData['optional_checkbox1'];
+		$member->optionalCheckbox2 = $memberData['optional_checkbox2'];
+		$member->optionalCheckbox3 = $memberData['optional_checkbox3'];
+		$member->optionalCheckbox4 = $memberData['optional_checkbox4'];
 		
 		return $member;
 	}
@@ -90,20 +147,39 @@ class RegwebApi {
 									RestRequest::POST);
 		$request->postParams['access_token'] = $this->authHandler->getAccessToken();
 		
-		$request->postParams = array(
-			'firstname' 	=> $member->firstname,
-			'lastname' 		=> $member->lastname,
-			'address1' 		=> $member->address1,
-			'address2' 		=> $member->address2,
-			'postalcode' 	=> $member->postalcode,
-			'phone1' 		=> $member->phone1,
-			'phone2' 		=> $member->phone2,
-			'mobile' 		=> $member->mobile,
-			'email' 		=> $member->email);
+	if (isset($member->firstname)) { $request->postParams['firstname'] = $member->firstname; }
+		if (isset($member->lastname)) { $request->postParams['lastname'] = $member->lastname; }
+		if (isset($member->address1)) { $request->postParams['address1'] = $member->address1; }
+		if (isset($member->address2)) { $request->postParams['address2'] = $member->address2; }
+		if (isset($member->postalcode)) { $request->postParams['postalcode'] = $member->postalcode; }
+		if (isset($member->phone1)) { $request->postParams['phone1'] = $member->phone1; }
+		if (isset($member->phone2)) { $request->postParams['phone2'] = $member->phone2; }
+		if (isset($member->mobile)) { $request->postParams['mobile'] = $member->mobile; }
+		if (isset($member->email)) { $request->postParams['email'] = $member->email; }
+		// Password
+		if (isset($member->password)) { $request->postParams['password'] = $member->password; }
+		
+		// Optional fields
+		if (isset($member->optionalTextfield1)) { $request->postParams['optional_textfield1'] = $member->optionalTextfield1; }
+		if (isset($member->optionalTextfield2)) { $request->postParams['optional_textfield2'] = $member->optionalTextfield2; }
+		if (isset($member->optionalTextfield3)) { $request->postParams['optional_textfield3'] = $member->optionalTextfield3; }
+		if (isset($member->optionalTextfield4)) { $request->postParams['optional_textfield4'] = $member->optionalTextfield4; }
+		if (isset($member->optionalTextfield5)) { $request->postParams['optional_textfield5'] = $member->optionalTextfield5; }
+		if (isset($member->optionalTextfield6)) { $request->postParams['optional_textfield6'] = $member->optionalTextfield6; }
+		if (isset($member->optionalSelect1)) { $request->postParams['optional_select1'] = $member->optionalSelect1; }
+		if (isset($member->optionalSelect2)) { $request->postParams['optional_select2'] = $member->optionalSelect2; }
+		if (isset($member->optionalSelect3)) { $request->postParams['optional_select3'] = $member->optionalSelect3; }
+		if (isset($member->optionalSelect4)) { $request->postParams['optional_select4'] = $member->optionalSelect4; }
+		if (isset($member->optionalDate1)) { $request->postParams['optional_date1'] = $member->optionalDate1; }
+		if (isset($member->optionalDate2)) { $request->postParams['optional_date2'] = $member->optionalDate2; }
+		if (isset($member->optionalCheckbox1)) { $request->postParams['optional_checkbox1'] = $member->optionalCheckbox1; }
+		if (isset($member->optionalCheckbox2)) { $request->postParams['optional_checkbox2'] = $member->optionalCheckbox2; }
+		if (isset($member->optionalCheckbox3)) { $request->postParams['optional_checkbox3'] = $member->optionalCheckbox3; }
+		if (isset($member->optionalCheckbox4)) { $request->postParams['optional_checkbox4'] = $member->optionalCheckbox4; }
 		
 		$response = $request->execute();
 		
-		switch ($response->getStatusCode()) {
+		switch ($response->statusCode) {
 			case 200:
 				return new UpdateResult(true);
 				break;
@@ -113,5 +189,39 @@ class RegwebApi {
 			default:
 				throw new UnexpectedResponse();
 		}
+	}
+	
+	/**
+	 * Fetches possible values for optional select field
+	 * 
+	 * @param int $id
+	 * @return \Regweb\Rest\ResourceType\OptionalSelectValues
+	 */
+	public function getOptionalSelectValues($id) {
+		$request = new RestRequest(	$this->regwebBaseUrl . '/api/v1/optionalselectvalues/' . $id);
+		$request->getParams['access_token'] = $this->authHandler->getAccessToken();
+		
+		$response = $request->execute();
+		
+		$values = new OptionalSelectValues();
+		
+		$values->id = $response->body['id'];
+		$values->label = $response->body['label'];
+		$values->values = array();
+		foreach ($response->body['values'] as $value) {
+			$valueObj = new OptionalSelectValue();
+			$valueObj->id = $value['id'];
+			$valueObj->label = $value['label'];
+			$values->values[] = $valueObj;
+		}
+		
+		return $values;
+	}
+	
+	public function lostPassword($identification) {
+		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/lostpassword', RestRequest::POST);
+		$request->postParams['identification'] = $identification;
+		$response = $request->execute();
+		return $response->body;
 	}
 }
