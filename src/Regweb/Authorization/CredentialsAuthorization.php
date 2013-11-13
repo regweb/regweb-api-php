@@ -22,7 +22,7 @@ class CredentialsAuthorization implements AuthSchemeInterface {
 	}
 	
 	public function authorizeCredentials($username, $password) {
-		$request = new RestRequest($this->regwebBaseUrl . '/api/oauth2/token', RestRequest::POST);
+		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/oauth2/token', RestRequest::POST);
 		
 		$request->postParams = array(
 			'grant_type' 	=> 'password',
@@ -66,7 +66,7 @@ class CredentialsAuthorization implements AuthSchemeInterface {
 	}
 	
 	public function refreshAccessToken() {
-		$request = new RestRequest($this->regwebBaseUrl . '/api/oauth2/token', RestRequest::POST);
+		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/oauth2/token', RestRequest::POST);
 		
 		$request->postParams = array(
 			'grant_type' 	=> 'refresh_token',

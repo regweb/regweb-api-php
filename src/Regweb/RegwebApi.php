@@ -147,7 +147,7 @@ class RegwebApi {
 									RestRequest::POST);
 		$request->postParams['access_token'] = $this->authHandler->getAccessToken();
 		
-	if (isset($member->firstname)) { $request->postParams['firstname'] = $member->firstname; }
+		if (isset($member->firstname)) { $request->postParams['firstname'] = $member->firstname; }
 		if (isset($member->lastname)) { $request->postParams['lastname'] = $member->lastname; }
 		if (isset($member->address1)) { $request->postParams['address1'] = $member->address1; }
 		if (isset($member->address2)) { $request->postParams['address2'] = $member->address2; }
