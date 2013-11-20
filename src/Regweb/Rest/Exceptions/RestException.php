@@ -1,9 +1,14 @@
 <?php
 namespace Regweb\Rest\Exceptions;
 
+use Regweb\Rest\RestResponse;
 class RestException extends \Exception {
 	public $error;
 	public $description;
+	/**
+	 * Response that caused the exception
+	 * @var RestResponse
+	 */
 	public $response;
 	protected $debugData;
 	

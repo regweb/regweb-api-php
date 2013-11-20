@@ -5,21 +5,45 @@ use Regweb\Authorization\AuthSchemeInterface;
 
 use Regweb\Rest\RestRequest;
 
-use Regweb\Rest\ResourceType\Member,
-    Regweb\Rest\ResourceType\User;
+use Regweb\Rest\ResourceType\Member as MemberResource,
+    Regweb\Rest\ResourceType\User as UserResource;
 use Regweb\Rest\Exceptions\UnexpectedResponse;
 use Regweb\Rest\UpdateResult;
-use Regweb\Rest\ResourceType\OptionalSelectValues;
-use Regweb\Rest\ResourceType\OptionalSelectValue;
+use Regweb\Rest\ResourceType\OptionalSelectValues as OptionalSelectValuesResource;
+use Regweb\Rest\ResourceType\OptionalSelectValue as OptionalSelectValueResource;
+use Regweb\Logger\Logger;
+use Regweb\Logger\RequestLogger;
+use Regweb\Logger\ResponseLogger;
+use Regweb\Rest\Exceptions\Unauthorized;
+use Regweb\Rest\MetaData;
 
 class RegwebApi {
 	
+	protected $meta;
 	protected $regwebBaseUrl;
 	protected $authHandler;
+	protected $logger;
 	
-	public function __construct($regwebBaseUrl, AuthSchemeInterface $authorizationHandler) {
-		$this->regwebBaseUrl = $regwebBaseUrl;
+	public function __construct($regwebBaseUrl, AuthSchemeInterface $authorizationHandler, MetaData $meta, Logger $logger) {
+		$regwebBaseUrl = rtrim($regwebBaseUrl, '/');
+		
+		$this->meta = $meta;
+		$this->regwebBaseUrl = $regwebBaseUrl.'/api/v1/';
 		$this->authHandler = $authorizationHandler;
+		$this->logger = $logger;
+	}
+	
+	public function isLoggedIn() {
+		try {
+			$this->authHandler->getAccessToken();
+		} catch (Unauthorized $e) {
+			return false;
+		}
+		return true;
+	}
+	
+	public function createRequest($apiUrl, $urlParams = null, $method = RestRequest::GET) {
+		return new RestRequest($this->regwebBaseUrl, $apiUrl, $urlParams, $method, $this->meta, $this->logger);
 	}
 	
 	/**
@@ -28,12 +52,14 @@ class RegwebApi {
 	 * @return \Regweb\ResourceType\User
 	 */
 	public function getUser() {
-		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/user');
+		$request = $this->createRequest('user');
+		
 		$request->getParams['access_token'] = $this->authHandler->getAccessToken();
 		$request->getParams['expand'] = 'member';
+		
 		$response = $request->execute();
 		
-		$user = new User();
+		$user = new UserResource();
 		$user->username = $response->body['username'];
 		$user->firstname = $response->body['firstname'];
 		$user->lastname = $response->body['lastname'];
@@ -43,7 +69,7 @@ class RegwebApi {
 		if ($user->isMember) {
 			// Assume expanded data
 			$memberData = $response->body['member'];
-			$member = new Member();
+			$member = new MemberResource();
 			$member->id 		= $memberData['id'];
 			$member->firstname 	= $memberData['firstname'];
 			$member->lastname 	= $memberData['lastname'];
@@ -93,12 +119,13 @@ class RegwebApi {
 	 * @return \Regweb\ResourceType\Member
 	 */
 	public function getMember($id) {
-		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/members/' . $id);
+		$request = $this->createRequest('members/:id', array('id' => $id), RestRequest::GET);
+		
 		$request->getParams['access_token'] = $this->authHandler->getAccessToken();
 		$response = $request->execute();
 		$memberData = $response->body;
 		
-		$member = new Member();
+		$member = new MemberResource();
 		$member->id = $response->getValue['id'];
 		$member->firstname 	= $memberData['firstname'];
 		$member->lastname 	= $memberData['lastname'];
@@ -116,7 +143,7 @@ class RegwebApi {
 		$member->optionalTextfield4 = $memberData['optional_textfield4'];
 		$member->optionalTextfield5 = $memberData['optional_textfield5'];
 		$member->optionalTextfield6 = $memberData['optional_textfield6'];
-			
+		
 		$member->optionalSelect1 = $memberData['optional_select1'];
 		$member->optionalSelect2 = $memberData['optional_select2'];
 		$member->optionalSelect3 = $memberData['optional_select3'];
@@ -126,10 +153,10 @@ class RegwebApi {
 		$member->optionalSelect2Label = $memberData['optional_select2_label'];
 		$member->optionalSelect3Label = $memberData['optional_select3_label'];
 		$member->optionalSelect4Label = $memberData['optional_select4_label'];
-			
+		
 		$member->optionalDate1 = $memberData['optional_date1'];
 		$member->optionalDate2 = $memberData['optional_date2'];
-			
+		
 		$member->optionalCheckbox1 = $memberData['optional_checkbox1'];
 		$member->optionalCheckbox2 = $memberData['optional_checkbox2'];
 		$member->optionalCheckbox3 = $memberData['optional_checkbox3'];
@@ -142,9 +169,9 @@ class RegwebApi {
 	 * 
 	 * @param Member $member
 	 */
-	public function updateMember(Member $member) {
-		$request = new RestRequest(	$this->regwebBaseUrl . '/api/v1/members/' . $member->id,
-									RestRequest::POST);
+	public function updateMember(MemberResource $member) {
+		$request = $this->createRequest('members/:id', array('id' => $member->id), RestRequest::POST);
+		
 		$request->postParams['access_token'] = $this->authHandler->getAccessToken();
 		
 		if (isset($member->firstname)) { $request->postParams['firstname'] = $member->firstname; }
@@ -198,18 +225,19 @@ class RegwebApi {
 	 * @return \Regweb\Rest\ResourceType\OptionalSelectValues
 	 */
 	public function getOptionalSelectValues($id) {
-		$request = new RestRequest(	$this->regwebBaseUrl . '/api/v1/optionalselectvalues/' . $id);
+		$request = $this->createRequest('optionalselectvalues/:id', array('id' => $id));
+		
 		$request->getParams['access_token'] = $this->authHandler->getAccessToken();
 		
 		$response = $request->execute();
 		
-		$values = new OptionalSelectValues();
+		$values = new OptionalSelectValuesResource();
 		
 		$values->id = $response->body['id'];
 		$values->label = $response->body['label'];
 		$values->values = array();
 		foreach ($response->body['values'] as $value) {
-			$valueObj = new OptionalSelectValue();
+			$valueObj = new OptionalSelectValueResource();
 			$valueObj->id = $value['id'];
 			$valueObj->label = $value['label'];
 			$values->values[] = $valueObj;
@@ -219,7 +247,8 @@ class RegwebApi {
 	}
 	
 	public function lostPassword($identification) {
-		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/lostpassword', RestRequest::POST);
+		$request = $this->createRequest('lostpassword', null, RestRequest::POST);
+		
 		$request->postParams['identification'] = $identification;
 		$response = $request->execute();
 		return $response->body;

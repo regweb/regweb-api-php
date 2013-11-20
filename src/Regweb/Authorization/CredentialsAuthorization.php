@@ -6,6 +6,8 @@ use Regweb\Rest\RestRequest,
     Regweb\Rest\Exceptions\Unauthorized,
     Regweb\Rest\Exceptions\Forbidden,
     Regweb\Rest\Exceptions\UnexpectedResponse;
+use Regweb\Logger\Logger;
+use Regweb\Rest\MetaData;
 
 class CredentialsAuthorization implements AuthSchemeInterface {
 	
@@ -13,16 +15,33 @@ class CredentialsAuthorization implements AuthSchemeInterface {
 	protected $clientId;
 	protected $clientSecret;
 	protected $session;
+	protected $meta;
+	protected $logger;
 	
-	function __construct($regwebBaseUrl, $clientId, $clientSecret, AuthSessionInterface $session) {
-		$this->regwebBaseUrl = $regwebBaseUrl;
+	function __construct($regwebBaseUrl, $clientId, $clientSecret, AuthSessionInterface $session, MetaData $meta, Logger $logger) {
+		$regwebBaseUrl = rtrim($regwebBaseUrl, '/');
+		
+		$this->meta = $meta;
+		$this->regwebBaseUrl = $regwebBaseUrl.'/api/v1/';
 		$this->clientId = $clientId;
 		$this->clientSecret = $clientSecret;
 		$this->session = $session;
+		$this->logger = $logger;
 	}
 	
+	public function createRequest($apiUrl, $urlParams = null, $method = RestRequest::GET) {
+		return new RestRequest($this->regwebBaseUrl, $apiUrl, $urlParams, $method, $this->meta, $this->logger);
+	}
+	
+	/**
+	 * 
+	 * @param string $username
+	 * @param string $password
+	 * @throws UnexpectedResponse
+	 * @return LoginResult
+	 */
 	public function authorizeCredentials($username, $password) {
-		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/oauth2/token', RestRequest::POST);
+		$request = $this->createRequest('oauth2/token', null, RestRequest::POST);
 		
 		$request->postParams = array(
 			'grant_type' 	=> 'password',
@@ -31,23 +50,32 @@ class CredentialsAuthorization implements AuthSchemeInterface {
 			'username' 		=> $username,
 			'password' 		=> $password);
 		
-		$response = $request->execute();
-		
-		switch ($response->statusCode) {
-			case 200:
-				// Success
-				$this->session->setValues(array(
-					'access_token' 	=> $response->body['access_token'],
-					'refresh_token' => $response->body['refresh_token'],
-					'refresh_at' 	=> time() + $response->body['expires_in'] - 5));
-				
-				return true;
-				break;
-			default:
-				throw new UnexpectedResponse(	'unexpected_response',
-												'Status code not expected.',
-												$response,
-												array('status_code' => $response->statusCode));
+		try {
+			$response = $request->execute();
+			
+			switch ($response->statusCode) {
+				case 200:
+					// Success
+					$this->session->setValues(array(
+						'access_token' 	=> $response->body['access_token'],
+						'refresh_token' => $response->body['refresh_token'],
+						'refresh_at' 	=> time() + $response->body['expires_in'] - 5));
+					
+					return new LoginResult(true, false, false, false);
+					break;
+				default:
+					throw new UnexpectedResponse(	'unexpected_response',
+						'Status code not expected.',
+						$response,
+						array('status_code' => $response->statusCode));
+			}
+		} catch (Unauthorized $e) {
+			return new LoginResult(	false,
+									false,
+									($e->response->body['member_active_check_failed']) ? true : false,
+									($e->response->body['unique_email_check_failed']) ? true : false);
+		} catch (BadRequest $e) {
+			return new LoginResult(false, true, false, false);
 		}
 	}
 	
@@ -66,7 +94,7 @@ class CredentialsAuthorization implements AuthSchemeInterface {
 	}
 	
 	public function refreshAccessToken() {
-		$request = new RestRequest($this->regwebBaseUrl . '/api/v1/oauth2/token', RestRequest::POST);
+		$request = $this->createRequest('oauth2/token', null, RestRequest::POST);
 		
 		$request->postParams = array(
 			'grant_type' 	=> 'refresh_token',
