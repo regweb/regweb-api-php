@@ -126,7 +126,7 @@ class RegwebApi {
 		$memberData = $response->body;
 		
 		$member = new MemberResource();
-		$member->id = $response->getValue['id'];
+		$member->id 		= $memberData['id'];
 		$member->firstname 	= $memberData['firstname'];
 		$member->lastname 	= $memberData['lastname'];
 		$member->address1 	= $memberData['address1'];
